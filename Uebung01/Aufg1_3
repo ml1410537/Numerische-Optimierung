@@ -1,0 +1,14 @@
+
+
+s =1;
+x01 = [-1;1];
+x02 = x01 + s*[1;0];
+x03 = x01 + s*[0;1];
+xall0 = [x01,x02,x03];
+
+fct = @Rosenbrock;
+plotflag = 1;
+pauseflag = 0;
+
+[xopt, fopt] = neldermead(fct, xall0, plotflag, pauseflag)
+
