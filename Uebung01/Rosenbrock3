@@ -1,0 +1,12 @@
+function f = Rosenbrock3(x)
+theta = 6;
+phi = 60;
+tau = 2;
+if x(1) <=0
+    f = theta * phi * abs(x(1)).^(tau) + x(2) + x(2)^2;
+else
+    f = theta * (x(1,:)).^(tau) + x(2) + x(2)^2;
+end    
+end
+
+
