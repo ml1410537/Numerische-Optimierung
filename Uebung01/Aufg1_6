@@ -1,0 +1,15 @@
+
+
+s =1;
+x01 = [0;0];
+x02 = [1;1];
+x03 = 1/8*[1+sqrt(33);1-sqrt(33)];
+xall0 = [x01,x02,x03];
+
+fct = @Rosenbrock3;
+plotflag = 1;
+pauseflag = 0;
+
+[xopt, fopt] = neldermead(fct, xall0, plotflag, pauseflag);
+
+
