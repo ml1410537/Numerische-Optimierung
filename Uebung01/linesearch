@@ -1,0 +1,118 @@
+function [xsol, fsol] = linesearch(fct, x0, plotflag, pauseflag)
+%
+% Vorlesung 'Numerische Optimierung und modellprädiktive Regelung'
+%
+% Template für Liniensuchverfahren
+%
+% - ergänzen Sie die '???'-Einträge
+%
+% ?bergabeargumente: 
+%
+% fct       Name (string) der Funktion zur Problemdefinition
+%           (siehe Template 'linesearch_problem.m')
+% x0        Startwert für Liniensuche
+% plotflag  (0 oder 1): Aufruf der Funktion plotfct (siehe unten) zur 
+%           grafischen Darstellung der einzelnen Iterationen
+% pauseflag (0 oder 1): Pause nach jedem Aufruf von plotfct
+
+global old
+old = [x0; feval(fct, x0)];
+
+% maximale Iterationsanzahl
+kmax = 200;
+% maximale Iterationen in Liniensuche
+lsmax = 10;
+% Toleranzen für Abbruchkriterien (in x und f)
+eps_f = 1e-9;
+eps_x = 1e-9;
+% Parameter für Armijo-Bedingung
+c1 = 0.5;
+
+% Start
+xk = x0;
+[f, grad, H] = feval(fct, x0);
+Nf=1; Ng=1; NH=1;
+
+% Formatierung für Ausgabe
+fprintf('Iter.  N(f)  N(grad)  N(Hess)            f(x)          alpha       ||grad||\n');
+fprintf('---------------------------------------------------------------------------\n');
+formatstrFirstIter = '       %4i     %4i     %4i   %13.6g                 %13.3g\n';
+formatstr          = ' %4i  %4i     %4i     %4i   %13.6g  %13.6g  %13.3g\n';
+fprintf(formatstrFirstIter, 1, 1, 1, f, norm(grad));
+
+
+% Hauptschleife
+% ---------------------------------------------------------
+for k = 1 : kmax
+  
+  % Suchrichtung
+  sk = -H\grad;
+  sk = - inv(H)*grad;
+  % Liniensuche
+  alpha = 1;    % maximale Schrittweite
+  ls = 1;       % Zähler für Liniensuche
+  while ls <= lsmax
+    x_ls  = xk + alpha * sk;
+    f_ls  = feval(fct, x_ls);
+    Nf = Nf + 1;
+    % Abbruchbedingung
+    LScrit = (f_ls<= (f+c1*alpha*grad'*sk));
+    disp(LScrit)
+    % Backtracking-Abfrage    
+    if LScrit == true
+      break
+    end
+    ls = ls + 1;
+    alpha = alpha / 2;
+  end
+  
+  % zugehöriger Gradient und Hessematrix 
+  % (Hinweis: Erneute Auswertung von f ist eigentlich unnötig)
+  [f_ls, grad, H] = feval(fct, x_ls); 
+  Nf = Nf+1; Ng = Ng+1; NH = NH+1; 
+
+  % Textausgabe
+  fprintf(formatstr, k, Nf, Ng, NH, f, alpha, norm(grad));        
+  if plotflag
+    plotfct(x_ls, f_ls);
+    if pauseflag
+      pause
+    end
+  end
+  
+  % Abbruchkriterium
+  if abs(f_ls - f) <= eps_f || norm(xk - x_ls) <= eps_x
+    disp('Abbruchkriterium erfüllt.')
+    xsol = x_ls;
+    fsol = f_ls;
+    break
+  else      % nächster Schritt
+    xk   = x_ls;
+    f    = f_ls;
+  end
+
+end
+% ---------------------------------------------------------
+
+if k == kmax
+  disp('Maximale Anzahl an Iterationen erreicht.');
+  xsol = x_ls;
+  fsol = f_ls; 
+end
+
+
+% Funktion zum Darstellen der einzelnen Iterationen
+% ---------------------------------------------------------
+function plotfct(x, f)
+
+global old
+if size(x,1) > 2
+  error('Darstellung nur für ein- oder zweidimensionale Probleme.');
+end
+cc = get(gca, 'colororder');
+if size(x,1) == 1
+  plot([old(1), x(1)], [old(2), f], '-o', 'LineWidth', 1, 'Color', cc(1,:));
+else
+  plot3([old(1), x(1)], [old(2), x(2)], [old(3), f], '-o', 'LineWidth', 1, 'Color', cc(1,:));    
+end
+old = [x; f];
