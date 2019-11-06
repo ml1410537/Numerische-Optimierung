@@ -1,0 +1,11 @@
+
+
+
+x0 = [-1;1];
+
+fct = @linesearch_problem;
+plotflag = 1;
+pauseflag = 0;
+
+[xopt, fopt] = linesearch(fct, x0, plotflag, pauseflag)
+
