@@ -1,0 +1,9 @@
+%1=-1:0.01:1; 
+%x2=-1:0.01:1;
+%[X1,X2]=meshgrid(x1,x2);
+%Z = 100*(X2-X1.^2).^2+(X1-1).^2;
+%surf(X1,X2,Z);   
+
+x0 = [-1,-1];
+x = fminunc(@Rosenbrock,x0)
+x = fminsearch(@Rosenbrock,x0)
