@@ -1,0 +1,163 @@
+
+function [xopt, fopt] = neldermead(fct, xall0, plotflag, pauseflag)
+%
+% Vorlesung 'Numerische Optimierung und modellpr?diktive Regelung'
+%
+% Template f��r Simplex-Verfahren nach Nelder und Mead:
+%
+% - erg?nzen Sie die '???'-Eintr?ge
+%
+% ?bergabeargumente: 
+%
+% fct       Name (string) der Kostenfunktion
+% xall0     Startsimplex in der Form [x01, x02, ...,x0n1]
+% plotflag  (0 oder 1): Aufruf der Funktion plotfct (siehe unten) zur 
+%           grafischen Darstellung der einzelnen Iterationen /Simplexe
+% pauseflag (0 oder 1): Pause nach jedem Aufruf von plotfct
+%
+
+% max. Anzahl an Iterationen
+kmax = 200;
+% Abbruchkriterium
+eps_f = 1e-9;
+
+% Funktionswerte f��r ersten Simplex
+xall = xall0;
+Nx = size(xall, 1);
+fall = zeros(1, Nx+1);
+for i = 1 : Nx+1
+  fall(i) = feval(fct, xall(:,i));
+end
+
+% weitere Variablen
+Nf = Nx+1;                         % Z?hler
+schritt    = 'Initialisierung';    % Textausgabe
+shrinkflag = false;                % Schrumpfungschritt
+
+% Formatierung f��r Textausgabe
+fprintf('Iter.   N(f)           fmin          fmax     fmax-fmin   Operation\n');
+fprintf('----------------------------------------------------------------------------\n');
+formatstr = ' %4.0f   %4.0f  %13.6g %13.6g %13.6g   %s\n';
+
+% Iterationschleife
+for k = 1 : kmax
+
+  % Sortierung
+  [fall, idx] = sort(fall);
+  xall = xall(:, idx);
+  % Mittelpunkt
+  xmid = sum(xall(:,1:Nx),Nx)/Nx;
+  % Text- & grafische Ausgabe
+  fprintf(formatstr, k, Nf, fall(1), fall(3), fall(3)-fall(1), schritt);
+  if plotflag
+    plotfct(k, xall, fall);
+    if pauseflag
+      pause
+    end
+  end
+  
+  % Abbruchkriterium
+  if abs(fall(1) - fall(end)) < eps_f
+    xopt = xmid;
+    fopt = feval(fct, xmid);
+    Nf = Nf + 1;
+    fprintf('Abbruchkriterium erf��llt.\n')
+    break
+  end 
+
+  % Reflexion
+  xr = xmid + (xmid - xall(:,Nx+1));
+  fr = feval(fct,xr); 
+  Nf=Nf+1;
+  if fall(1) <= fr && fr < fall(Nx)
+    xall(:, Nx+1) = xr;
+    fall(Nx+1) = fr;
+    schritt = 'Reflexion';
+    
+  % Expansion
+  elseif fr < fall(1)
+    xe = xmid + 2 * (xmid - xall(:,Nx+1));
+    fe = feval(fct, xe);
+    Nf = Nf + 1;
+    if fe < fr 
+      xall(:, Nx+1) = xe;
+      fall(Nx+1) = fe;
+      schritt = 'Expansion';
+    else      
+      xall(:, Nx+1) = xr;
+      fall(Nx+1) = fr;      
+      schritt = 'Reflexion';
+    end
+    
+  % ?u?ere Kontraktion
+  elseif fall(2) <= fr && fr < fall(3)
+    xc = xmid + 1/2 * (xmid - xall(:,Nx+1));
+    fc = feval(fct, xc);
+    Nf = Nf + 1;
+    if fc <= fr 
+      xall(:, Nx+1) = xc;
+      fall(Nx+1) = fc;
+      schritt = '?u?ere Kontraktion';
+    else      
+      shrinkflag = true;
+    end
+  
+  % Innere Kontraktion
+  elseif fr >= fall(3)
+    xc = xmid - 1/2 * (xmid - xall(:,Nx+1));
+    fc = feval(fct, xc);
+    Nf = Nf + 1;
+    if fc < fall(Nx+1)
+      xall(:, Nx+1) = xc;
+      fall(Nx+1) = fc;
+      schritt = 'Innere Kontraktion';
+    else           
+      shrinkflag=true;
+    end
+  end
+
+  % Schrumpfung
+  if shrinkflag                                
+    for i = 2 : Nx+1
+      xall(:, i) = 1/2 * (xall(:,1) + xall(:,i));
+      fall(i)    = feval(fct, xall(:,i));
+      Nf = Nf + 1;
+    end   
+    schritt    = 'Schrumpfung';
+    shrinkflag = false;
+  end
+  
+end
+
+if k == kmax
+  disp('Maximale Anzahl an Iterationen erreicht.');
+  xopt = xmid;
+  fopt = feval(fct, xmid);
+  Nf = Nf + 1;
+end
+
+
+
+% Funktion zum Darstellen der einzelnen Iterationen
+% ---------------------------------------------------------
+function plotfct(k, xall, fall)
+
+global hsimpl
+if k == 1
+  hsimpl = [];
+end
+if size(xall,1) > 2
+  error('Darstellung nur f��r zweidimensionale Probleme.');
+end
+
+% Abdunkeln von vorherigem Simplex
+cc = get(gca, 'colororder');
+if ~isempty(hsimpl)
+  set(hsimpl, 'Color', cc(1,:));
+end
+
+% Zeichnen von neuem Simplex
+hsimpl(1) = plot3(xall(1,[1,2]), xall(2,[1,2]), fall([1,2]), '-', 'LineWidth', 2, 'Color', cc(2,:));
+hold on;
+hsimpl(2) = plot3(xall(1,[2,3]), xall(2,[2,3]), fall([2,3]), '-', 'LineWidth', 2, 'Color', cc(2,:));
+hsimpl(3) = plot3(xall(1,[3,1]), xall(2,[3,1]), fall([3,1]), '-', 'LineWidth', 2, 'Color', cc(2,:));
