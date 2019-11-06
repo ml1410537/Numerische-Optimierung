@@ -1,0 +1,11 @@
+
+
+
+x0 = [1.1;1.0];
+
+fct = @Rosenbrock2;
+plotflag = 1;
+pauseflag = 0;
+
+[xopt, fopt] = linesearch(fct, x0, plotflag, pauseflag);
+
