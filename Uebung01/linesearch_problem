@@ -1,0 +1,26 @@
+
+function [f,grad,H] = linesearch_problem(x)
+%
+% Vorlesung 'Numerische Optimierung und modellprädiktive Regelung'
+%
+% Template zur Problemdefinition für Liniensuchverfahren
+% (siehe Template 'linesearch.m')
+%
+% - ergänzen Sie die '???'-Einträge
+% - die Vergabe eines anderen Namens für die Funktion und Datei ist
+%   möglich (z.B. 'rosenbrock' und 'rosenbrock.m')
+% - Aufruf mit Funktion linesearch, z.B. linesearch('rosenbrock',x0)
+
+
+% Kostenfunktion
+f = 100*(x(2)-x(1)^2)^2 + (x(1)-1)^2;
+
+% Gradient (nur ausgewertet, wenn angefordert)
+if nargout > 1
+grad = [-400*(x(2)-x(1)^2)*x(1)+2*(x(1)-1);200*(x(2)-x(1)^2)];
+end
+
+% Hessematrix (nur ausgewertet, wenn angefordert)
+if nargout > 2
+H = [-400*(x(2)-3*x(1)^2)+2 -400*x(1);-400*x(1) 200];
+end
